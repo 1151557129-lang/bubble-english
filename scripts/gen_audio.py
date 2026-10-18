@@ -28,6 +28,9 @@ CONCURRENCY = 5
 RATE_OVERRIDES = {
     "one": "+0%", "two": "+0%", "three": "+0%", "four": "+0%", "five": "+0%",
     "six": "+0%", "seven": "+0%", "eight": "+0%", "nine": "+0%", "ten": "+0%",
+    "eleven": "+0%", "twelve": "+0%", "thirteen": "+0%", "fourteen": "+0%", "fifteen": "+0%",
+    "sixteen": "+0%", "seventeen": "+0%", "eighteen": "+0%", "nineteen": "+0%", "twenty": "+0%",
+    "hundred": "+0%",
 }
 
 # 闯关模式的提示语/鼓励语（(文件名, 文本)）
