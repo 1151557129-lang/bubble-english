@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>泡泡英语</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7ec8f7">
+  <style>
+    :root {
+      --sky-top: #7ec8f7;
+      --sky-bottom: #dff3ff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      font-family: -apple-system, "PingFang SC", "Comic Sans MS", sans-serif;
+    }
+    canvas { display: block; }
+    .hidden { display: none !important; }
+    button { font-family: inherit; }
+
+    /* 顶部栏（自由模式） */
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #title {
+      flex: 1;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    .icon-btn {
+      pointer-events: auto;
+      width: 44px; height: 44px;
+      border: none; border-radius: 50%;
+      background: rgba(255,255,255,.85);
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .lab-btn {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      min-width: 42px;
+      padding: 5px 7px;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,.85);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .lab-btn .ico { font-size: 20px; line-height: 1; }
+    .lab-btn .lbl { font-size: 10px; color: #666; font-weight: 600; line-height: 1; }
+
+    /* 闯关中央「Listen Again」按钮 */
+    #quiz-play-btn {
+      position: fixed;
+      left: 50%; top: 49%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 22px;
+      background: #ff8fab;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+      z-index: 15;
+      white-space: nowrap;
+    }
+    #quiz-play-btn .ico { font-size: 24px; line-height: 1; }
+    #quiz-play-btn .lbl { font-size: 11px; font-weight: 700; line-height: 1; letter-spacing: .2px; }
+    #quiz-play-btn:active { transform: translate(-50%, -50%) scale(.94); }
+
+    /* 闯关顶栏 */
+    #quiz-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
+      z-index: 10;
+    }
+    #quiz-progress {
+      flex: 1;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    #quiz-stars {
+      min-width: 64px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(255,255,255,.3);
+      border-radius: 20px;
+      padding: 6px 10px;
+      text-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+
+    /* 分类栏 */
+    #category-bar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 8px 12px calc(env(safe-area-inset-bottom) + 10px);
+      background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.9) 40%);
+      z-index: 10;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cat-btn {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 58px;
+      padding: 8px 10px;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      background: rgba(255,255,255,.75);
+      cursor: pointer;
+      transition: transform .1s ease, background .2s ease, border-color .2s ease;
+    }
+    .cat-btn:active { transform: scale(.92); }
+    .cat-btn.active { background: #fff; border-color: #ff8fab; }
+    .cat-btn .cat-emoji { font-size: 26px; }
+    .cat-btn .cat-name { font-size: 12px; color: #4a4a4a; font-weight: 600; }
+
+    /* 单词卡片（自由模式点破后弹出） */
+    #word-card {
+      position: fixed;
+      left: 50%; top: 30%;
+      transform: translate(-50%, -50%) scale(.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 20px 32px;
+      border-radius: 24px;
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 8px 30px rgba(0,0,0,.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      z-index: 20;
+    }
+    #word-card.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    #word-card-emoji { font-size: 56px; }
+    #word-card-word { font-size: 30px; font-weight: 800; color: #2b2b2b; }
+    #word-card-cn { font-size: 18px; color: #888; }
+
+    /* 首页 */
+    #home {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 0 32px;
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+      z-index: 30;
+    }
+    #home h1 { font-size: 46px; color: #fff; margin: 0; text-shadow: 0 3px 10px rgba(0,0,0,.25); }
+    #home .sub { font-size: 16px; color: rgba(255,255,255,.9); margin-bottom: 18px; }
+    .mode-btn {
+      width: 100%;
+      max-width: 320px;
+      padding: 18px 24px;
+      font-size: 24px;
+      font-weight: 700;
+      border: none;
+      border-radius: 26px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .mode-btn:active { transform: scale(.96); }
+    #free-btn { background: #fff; color: #ff8fab; }
+    #quiz-btn { background: #fff; color: #4ecdc4; }
+
+    /* 闯关结算弹窗 */
+    #result-modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: rgba(0,0,0,.45);
+      z-index: 40;
+    }
+    #result-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 28px 36px;
+      border-radius: 28px;
+      background: #fff;
+      box-shadow: 0 12px 40px rgba(0,0,0,.3);
+    }
+    #result-stars { font-size: 34px; letter-spacing: 4px; }
+    #result-text { font-size: 22px; font-weight: 800; color: #2b2b2b; }
+    #result-btns { display: flex; gap: 12px; margin-top: 8px; }
+    #result-btns button {
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      border-radius: 22px;
+      cursor: pointer;
+    }
+    #result-again { background: #4ecdc4; color: #fff; }
+    #result-home { background: #f0f0f0; color: #666; }
+
+    /* 家长入口 */
+    .parent-btn {
+      position: absolute;
+      bottom: calc(env(safe-area-inset-bottom) + 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255,255,255,.9);
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    /* 通用弹窗 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.45);
+      z-index: 50;
+      padding: 24px;
+    }
+    .modal-card {
+      width: 100%;
+      max-width: 340px;
+      background: #fff;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.3);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 82vh;
+      overflow-y: auto;
+      touch-action: auto;
+    }
+    .modal-title { font-size: 20px; font-weight: 800; color: #2b2b2b; text-align: center; }
+    .modal-sub { font-size: 13px; color: #888; text-align: center; }
+
+    /* 家长锁题目 */
+    #gate-question { font-size: 30px; font-weight: 800; color: #ff8fab; text-align: center; }
+    #gate-input {
+      font-size: 20px;
+      text-align: center;
+      padding: 10px;
+      border: 2px solid #eee;
+      border-radius: 12px;
+      outline: none;
+      touch-action: auto;
+    }
+    #gate-input:focus { border-color: #ff8fab; }
+    #gate-error { color: #e74c3c; font-size: 13px; text-align: center; }
+    .modal-btns { display: flex; gap: 10px; }
+    .modal-btns button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+    }
+    .btn-primary { background: #ff8fab; color: #fff; }
+    .btn-ghost { background: #f0f0f0; color: #666; }
+    .btn-danger { background: #ffe3e3; color: #e74c3c; }
+
+    /* 家长中心内容 */
+    .pc-stats {
+      background: #f7fbff;
+      border-radius: 14px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 24px; font-weight: 800; color: #ff8fab; }
+    .stat-label { font-size: 12px; color: #888; }
+    .pc-section { font-size: 14px; font-weight: 700; color: #2b2b2b; margin-top: 4px; }
+    .cat-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .cat-t-left { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: #2b2b2b; }
+    .cat-t-count { font-size: 12px; color: #aaa; font-weight: 400; }
+    .cat-toggle input { width: 20px; height: 20px; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="topbar" class="hidden">
+    <button id="free-back" class="icon-btn">🏠</button>
+    <div id="title">🫧 泡泡英语</div>
+    <button id="mute-btn" class="lab-btn" title="声音"><span class="ico" id="mute-ico">🔊</span><span class="lbl">声音</span></button>
+  </div>
+
+  <div id="quiz-bar" class="hidden">
+    <button id="quiz-back" class="icon-btn">🏠</button>
+    <div id="quiz-progress">第 1 / 10 题</div>
+    <div id="quiz-stars">⭐ 0</div>
+    <button id="quiz-mute" class="lab-btn" title="声音"><span class="ico" id="quiz-mute-ico">🔊</span><span class="lbl">声音</span></button>
+  </div>
+
+  <button id="quiz-play-btn" class="hidden" title="Listen Again">
+    <span class="ico">▶️</span>
+    <span class="lbl">Listen Again</span>
+  </button>
+
+  <div id="category-bar" class="hidden"></div>
+
+  <div id="word-card">
+    <div id="word-card-emoji"></div>
+    <div id="word-card-word"></div>
+    <div id="word-card-cn"></div>
+  </div>
+
+  <div id="home">
+    <h1>🫧 泡泡英语</h1>
+    <div class="sub">点泡泡，学英文单词</div>
+    <button id="free-btn" class="mode-btn">🎈 自由泡泡</button>
+    <button id="quiz-btn" class="mode-btn">🎯 听音找词</button>
+    <button id="parent-btn" class="parent-btn">⚙️ 家长</button>
+  </div>
+
+  <div id="result-modal" class="hidden">
+    <div id="result-card">
+      <div id="result-stars">⭐⭐⭐</div>
+      <div id="result-text">答对 8 / 10</div>
+      <div id="result-btns">
+        <button id="result-again">🔁 再来一次</button>
+        <button id="result-home">🏠 返回</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="parent-gate" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-title">家长验证</div>
+      <div class="modal-sub">请回答下面的算术题</div>
+      <div id="gate-question">3 + 4 = ?</div>
+      <input id="gate-input" type="number" inputmode="numeric" placeholder="输入答案">
+      <div id="gate-error" class="hidden">答案不对，请重试</div>
+      <div class="modal-btns">
+        <button id="gate-cancel" class="btn-ghost">取消</button>
+        <button id="gate-ok" class="btn-primary">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="parent-center" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-title">家长中心</div>
+      <div class="pc-stats">
+        <div class="stat-item"><div class="stat-num" id="pc-quizzes">0</div><div class="stat-label">闯关轮数</div></div>
+        <div class="stat-item"><div class="stat-num" id="pc-accuracy">0%</div><div class="stat-label">答题正确率</div></div>
+        <div class="stat-item"><div class="stat-num" id="pc-learned">0</div><div class="stat-label">已掌握单词</div></div>
+        <div class="stat-item"><div class="stat-num" id="pc-correct">0</div><div class="stat-label">累计答对</div></div>
+      </div>
+      <div class="pc-section">开放分类</div>
+      <div id="pc-categories"></div>
+      <div class="modal-btns">
+        <button id="pc-reset" class="btn-danger">重置数据</button>
+        <button id="pc-close" class="btn-primary">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+  <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});</script>
+</body>
+</html>
