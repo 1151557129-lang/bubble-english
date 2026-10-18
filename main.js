@@ -495,36 +495,6 @@ function setMode(newMode) {
 }
 
 // ===== 家长中心 =====
-let gateAnswer = 0
-
-function genGateQuestion() {
-  const a = 1 + Math.floor(Math.random() * 9)
-  const b = 1 + Math.floor(Math.random() * 9)
-  const op = pick(['+', '-', '×'])
-  if (op === '+') return { text: `${a} + ${b} = ?`, ans: a + b }
-  if (op === '-') return { text: `${Math.max(a, b)} - ${Math.min(a, b)} = ?`, ans: Math.max(a, b) - Math.min(a, b) }
-  return { text: `${a} × ${b} = ?`, ans: a * b }
-}
-
-function openParentGate() {
-  const q = genGateQuestion()
-  gateAnswer = q.ans
-  el('gate-question').textContent = q.text
-  el('gate-input').value = ''
-  el('gate-error').classList.add('hidden')
-  el('parent-gate').classList.remove('hidden')
-  setTimeout(() => el('gate-input').focus(), 100)
-}
-
-function checkGate() {
-  if (parseInt(el('gate-input').value, 10) === gateAnswer) {
-    el('parent-gate').classList.add('hidden')
-    openParentCenter()
-  } else {
-    el('gate-error').classList.remove('hidden')
-  }
-}
-
 function openParentCenter() {
   renderParentCenter()
   el('parent-center').classList.remove('hidden')
@@ -604,10 +574,7 @@ function toggleMute() {
 el('mute-btn').addEventListener('click', toggleMute)
 el('quiz-mute').addEventListener('click', toggleMute)
 
-el('parent-btn').addEventListener('click', openParentGate)
-el('gate-cancel').addEventListener('click', () => el('parent-gate').classList.add('hidden'))
-el('gate-ok').addEventListener('click', checkGate)
-el('gate-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkGate() })
+el('parent-btn').addEventListener('click', openParentCenter)
 el('pc-close').addEventListener('click', () => el('parent-center').classList.add('hidden'))
 el('pc-reset').addEventListener('click', () => { if (confirm('确定要清除所有学习数据吗？')) resetData() })
 

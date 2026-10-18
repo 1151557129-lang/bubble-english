@@ -297,21 +297,6 @@
       touch-action: auto;
     }
     .modal-title { font-size: 20px; font-weight: 800; color: #2b2b2b; text-align: center; }
-    .modal-sub { font-size: 13px; color: #888; text-align: center; }
-
-    /* 家长锁题目 */
-    #gate-question { font-size: 30px; font-weight: 800; color: #ff8fab; text-align: center; }
-    #gate-input {
-      font-size: 20px;
-      text-align: center;
-      padding: 10px;
-      border: 2px solid #eee;
-      border-radius: 12px;
-      outline: none;
-      touch-action: auto;
-    }
-    #gate-input:focus { border-color: #ff8fab; }
-    #gate-error { color: #e74c3c; font-size: 13px; text-align: center; }
     .modal-btns { display: flex; gap: 10px; }
     .modal-btns button {
       flex: 1;
@@ -323,7 +308,6 @@
       cursor: pointer;
     }
     .btn-primary { background: #ff8fab; color: #fff; }
-    .btn-ghost { background: #f0f0f0; color: #666; }
     .btn-danger { background: #ffe3e3; color: #e74c3c; }
 
     /* 家长中心内容 */
@@ -397,20 +381,6 @@
       <div id="result-btns">
         <button id="result-again">🔁 再来一次</button>
         <button id="result-home">🏠 返回</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="parent-gate" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-title">家长验证</div>
-      <div class="modal-sub">请回答下面的算术题</div>
-      <div id="gate-question">3 + 4 = ?</div>
-      <input id="gate-input" type="number" inputmode="numeric" placeholder="输入答案">
-      <div id="gate-error" class="hidden">答案不对，请重试</div>
-      <div class="modal-btns">
-        <button id="gate-cancel" class="btn-ghost">取消</button>
-        <button id="gate-ok" class="btn-primary">确认</button>
       </div>
     </div>
   </div>
